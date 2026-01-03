@@ -1,0 +1,115 @@
+<mjml>
+  <mj-head>
+    <mj-title>Sign in to {{appName}}</mj-title>
+    <mj-font name="Inter" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
+    <mj-attributes>
+      <mj-all font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif" />
+      <mj-text color="#333333" font-size="16px" line-height="1.6" />
+      <mj-section background-color="#ffffff" padding="20px" />
+    </mj-attributes>
+    <mj-style>
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .button-td {
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .code-block {
+        background-color: #f5f5f5;
+        padding: 12px;
+        border-radius: 4px;
+        word-break: break-all;
+        font-size: 12px;
+        color: #666666;
+        font-family: 'Courier New', monospace;
+      }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f4f7fa">
+    
+    <!-- Header -->
+    <mj-section padding="40px 20px" css-class="gradient-bg">
+      <mj-column>
+        <mj-text align="center" font-size="32px" font-weight="700" color="#ffffff" padding="0">
+          🔐 {{appName}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" border-radius="12px" padding="40px 30px">
+      <mj-column>
+        <!-- Greeting -->
+        <mj-text font-size="20px" font-weight="600" color="#333333" padding-bottom="20px">
+          Hi {{userName}}!
+        </mj-text>
+
+        <!-- Message -->
+        <mj-text color="#666666" padding-bottom="20px">
+          We received a request to sign in to your account. Click the button below to securely access your account:
+        </mj-text>
+
+        <!-- CTA Button -->
+        <mj-button 
+          href="{{magicLink}}" 
+          background-color="#667eea"
+          color="#ffffff"
+          font-size="16px"
+          font-weight="600"
+          border-radius="8px"
+          padding="30px 0"
+          inner-padding="16px 48px"
+          css-class="button-td"
+        >
+          Sign In to Your Account
+        </mj-button>
+
+        <!-- Expiry Notice -->
+        <mj-wrapper background-color="#fff4e6" border-left="4px solid #ffa726" border-radius="4px" padding="16px" css-class="expiry-notice">
+          <mj-section background-color="transparent" padding="0">
+            <mj-column>
+              <mj-text color="#e65100" font-size="14px" padding="0">
+                <strong>⏰ This link expires in 10 minutes</strong> for your security.
+              </mj-text>
+            </mj-column>
+          </mj-section>
+        </mj-wrapper>
+
+        <!-- Secondary Message -->
+        <mj-text color="#666666" padding-top="25px" padding-bottom="0">
+          If you didn't request this link, you can safely ignore this email. Your account remains secure.
+        </mj-text>
+
+        <!-- Divider -->
+        <mj-divider border-color="#e0e0e0" border-width="1px" padding="25px 0" />
+
+        <!-- Alternative Link Section -->
+        <mj-text color="#999999" font-size="13px" padding-bottom="10px">
+          If the button doesn't work, copy and paste this link into your browser:
+        </mj-text>
+        
+        <mj-text padding="0" css-class="code-block">
+          <div class="code-block">{{magicLink}}</div>
+        </mj-text>
+
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#f9fafb" padding="30px 20px">
+      <mj-column>
+        <mj-text align="center" color="#666666" font-size="14px" font-weight="600" padding-bottom="8px">
+          {{appName}}
+        </mj-text>
+        <mj-text align="center" color="#999999" font-size="13px" padding="5px 0">
+          Questions? Contact us at <a href="mailto:{{supportEmail}}" style="color: #667eea; text-decoration: none;">{{supportEmail}}</a>
+        </mj-text>
+        <mj-text align="center" color="#999999" font-size="12px" padding-top="15px">
+          This is an automated email. Please do not reply to this message.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>
