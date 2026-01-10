@@ -31,10 +31,10 @@ jobs:
               cd /www/wwwroot/tgg_production_server && \
               echo '🔧 Setting safe directory...' && \
               sudo git config --global --add safe.directory /www/wwwroot/tgg_production_server && \
-              echo '🔗 Setting remote URL with token...' && \
-              sudo git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/ZanQ/MySignals.git && \
+              echo '🔗 Setting HTTPS remote...' && \
+              sudo git remote set-url origin https://github.com/ZanQ/MySignals.git && \
               echo '📥 Pulling latest code...' && \
-              sudo git pull origin master && \
+              echo '${{ secrets.GH_PAT }}' | sudo -S git -c credential.helper='!f() { echo username=ZanQ; echo password=${{ secrets.GH_PAT }}; }; f' pull origin master && \
               echo '📦 Installing dependencies...' && \
               sudo npm install && \
               echo '🛑 Stopping server...' && \
