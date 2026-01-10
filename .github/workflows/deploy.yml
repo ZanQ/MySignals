@@ -30,15 +30,17 @@ jobs:
               echo '📂 Navigating to project directory...' && \
               cd /www/wwwroot/tgg_production_server && \
               echo '🔧 Setting safe directory...' && \
-              git config --global --add safe.directory /www/wwwroot/tgg_production_server && \
+              sudo git config --global --add safe.directory /www/wwwroot/tgg_production_server && \
               echo '📥 Pulling latest code...' && \
-              git pull origin master && \
+              sudo git pull origin master && \
               echo '📦 Installing dependencies...' && \
-              npm install --production && \
+              sudo npm install --production && \
               echo '🛑 Stopping server...' && \
-              pm2 stop TGG-Production || true && \
+              sudo pm2 stop TGG-Production || true && \
               echo '🚀 Starting server...' && \
-              npm start && \
+              cd /www/wwwroot/tgg_production_server && sudo npm start && \
+              echo '🔄 Restoring file ownership...' && \
+              sudo chown -R www:www /www/wwwroot/tgg_production_server && \
               echo '✅ Deployment complete!' && \
-              pm2 status
+              sudo pm2 status
             "
