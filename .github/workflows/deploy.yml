@@ -27,7 +27,10 @@ jobs:
           gcloud compute ssh ${{ secrets.GCP_INSTANCE_NAME }} \
             --zone=${{ secrets.GCP_ZONE }} \
             --command="
-              cd ${{ secrets.PROJECT_PATH }} && \
+              echo '📂 Navigating to project directory...' && \
+              cd /www/wwwroot/tgg_production_server && \
+              echo '🔧 Setting safe directory...' && \
+              git config --global --add safe.directory /www/wwwroot/tgg_production_server && \
               echo '📥 Pulling latest code...' && \
               git pull origin master && \
               echo '📦 Installing dependencies...' && \
