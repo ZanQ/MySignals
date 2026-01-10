@@ -34,7 +34,7 @@ jobs:
               echo '📥 Pulling latest code...' && \
               sudo git pull origin master && \
               echo '📦 Installing dependencies...' && \
-              sudo npm install --production && \
+              sudo npm install && \
               echo '🛑 Stopping server...' && \
               sudo pm2 stop TGG-Production || true && \
               echo '🚀 Starting server...' && \
