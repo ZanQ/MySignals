@@ -5,15 +5,29 @@ A Node.js REST API for tracking trading positions, profit/loss analytics, and us
 ## Features
 
 - **Magic Link Authentication** - Passwordless login via email
+- **Stripe Subscriptions** - 1-month free trial, then monthly subscription
 - **Position Tracking** - Track open and closed trading positions
 - **P&L Analytics** - Automatic profit/loss calculations and win rate statistics
 - **Email Notifications** - Beautiful MJML-powered email templates
 - **User Management** - Subscription preferences for signals and position updates
+- **Payment Control** - Admin can exempt users from subscription requirements
 - **NoSQL Database** - MongoDB with Mongoose ODM
 - **Security** - JWT tokens, rate limiting, helmet, XSS protection
 - **API Documentation** - Swagger/OpenAPI docs
 - **Testing** - Unit and integration tests with Jest
 - **Docker Support** - Production-ready containerization
+
+## 🆕 Stripe Integration
+
+This API now includes **Stripe Checkout Sessions** for subscription management:
+
+- **1-month free trial** for all new users
+- Monthly subscription required after trial
+- Admin can flag users as payment-exempt
+- Users without active subscription cannot access signals/emails
+- Secure webhook handling for subscription events
+
+📚 **See [STRIPE_INTEGRATION_GUIDE.md](STRIPE_INTEGRATION_GUIDE.md)** for complete setup instructions and frontend integration examples.
 
 ## Quick Start
 
@@ -22,6 +36,7 @@ A Node.js REST API for tracking trading positions, profit/loss analytics, and us
 - Node.js >= 12.0.0
 - MongoDB (local or Atlas)
 - SMTP email account (Gmail recommended)
+- **Stripe account** (for subscriptions)
 
 ### Installation
 
@@ -40,7 +55,9 @@ npm install
 
 ### Environment Configuration
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory. See [ENV_SETUP.md](ENV_SETUP.md) for complete guide.
+
+**Required environment variables:**
 
 ```bash
 # Server
@@ -66,6 +83,11 @@ SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-specific-password
 EMAIL_FROM=your-email@gmail.com
+
+# Stripe Configuration (REQUIRED)
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_signing_secret
+STRIPE_PRICE_ID=price_your_subscription_price_id
 ```
 
 **Important:** 
@@ -73,6 +95,8 @@ EMAIL_FROM=your-email@gmail.com
 - Change `JWT_SECRET` to a strong random string in production
 - Update `BASE_URL` to your frontend application URL
 - Replace MongoDB connection string with your own cluster
+- **Get Stripe keys from [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys)**
+- **See [ENV_SETUP.md](ENV_SETUP.md) for detailed Stripe setup instructions**
 
 ## Running the Application
 
@@ -143,7 +167,7 @@ Once the server is running, visit `http://localhost:8888/v1/docs` to view the in
   }
   ```
 
-- `GET /v1/auth/magic-link/verify?token={token}` - Verify magic link and get JWT tokens
+- `GET /v1/auth/verify/verify?token={token}` - Verify magic link and get JWT tokens
 
 **Legacy Password Authentication:**
 - `POST /v1/auth/register` - Register new user
@@ -159,6 +183,19 @@ Once the server is running, visit `http://localhost:8888/v1/docs` to view the in
 - `GET /v1/users/:userId` - Get user by ID
 - `PATCH /v1/users/:userId` - Update user
 - `DELETE /v1/users/:userId` - Delete user
+- `POST /v1/users/:userId/payment-exempt` - Mark user as payment exempt (admin only)
+- `DELETE /v1/users/:userId/payment-exempt` - Remove payment exemption (admin only)
+
+### Subscriptions
+
+- `GET /v1/subscriptions/status` - Get current user's subscription status
+- `POST /v1/subscriptions/create-checkout-session` - Create Stripe checkout for subscription
+- `POST /v1/subscriptions/create-portal-session` - Create billing portal session to manage subscription
+- `POST /v1/subscriptions/webhook` - Stripe webhook endpoint (internal use)
+
+### Portfolio
+
+- `POST /v1/portfolio/dashboard` - Get portfolio dashboard (requires active subscription)
 
 ### Positions (Coming Soon)
 
@@ -180,6 +217,17 @@ Once the server is running, visit `http://localhost:8888/v1/docs` to view the in
   subscribe_signals: Boolean (default: false),
   subscribe_positions: Boolean (default: false),
   active: Boolean (default: true),
+  
+  // Subscription fields
+  is_payment_exempt: Boolean (default: false),
+  stripe_customer_id: String,
+  stripe_subscription_id: String,
+  subscription_status: String, // trial, active, past_due, canceled, etc.
+  trial_start_date: Date,
+  trial_end_date: Date,
+  subscription_start_date: Date,
+  subscription_end_date: Date,
+  
   last_login: Date,
   created_at: Date (default: now)
 }
@@ -245,6 +293,38 @@ NODE_ENV=development node test-email.js
 ```
 
 This will send a test email to the address specified in the script.
+
+## Testing Stripe Integration
+
+Several test tools are provided:
+
+### Interactive Shell Script
+```bash
+./test-api.sh
+```
+Interactive menu to test all subscription endpoints with curl commands.
+
+### Node.js Test Script
+```bash
+node test-subscription.js
+```
+Automated test suite for subscription functionality.
+
+### Manual Testing with Stripe CLI
+```bash
+# Forward webhooks to local server
+stripe listen --forward-to http://localhost:3000/v1/subscriptions/webhook
+
+# Trigger test events
+stripe trigger checkout.session.completed
+```
+
+**Test Card Numbers:**
+- Success: `4242 4242 4242 4242`
+- Declined: `4000 0000 0000 0002`
+- Requires 3D Secure: `4000 0025 0000 3155`
+
+See [STRIPE_INTEGRATION_GUIDE.md](STRIPE_INTEGRATION_GUIDE.md) for comprehensive testing guide.
 
 ## Docker Deployment
 
@@ -359,6 +439,21 @@ To modify the ESLint configuration, update the `.eslintrc.json` file. To modify 
 To prevent a certain file or directory from being linted, add it to `.eslintignore` and `.prettierignore`.
 
 To maintain a consistent coding style across different IDEs, the project contains `.editorconfig`
+
+## 📚 Documentation
+
+This project includes comprehensive documentation:
+
+- **[STRIPE_INTEGRATION_GUIDE.md](STRIPE_INTEGRATION_GUIDE.md)** - Complete Stripe setup guide with frontend examples
+- **[ENV_SETUP.md](ENV_SETUP.md)** - Quick reference for environment variables and Stripe configuration
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Technical summary of what was implemented
+- **[API_PORTFOLIO_DASHBOARD.md](API_PORTFOLIO_DASHBOARD.md)** - Portfolio API documentation
+
+### Test Scripts
+
+- `test-subscription.js` - Node.js script to test subscription endpoints
+- `test-api.sh` - Interactive bash script with curl commands for API testing
+- `test-email.js` - Test email sending functionality
 
 ## Contributing
 

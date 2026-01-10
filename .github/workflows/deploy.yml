@@ -1,0 +1,41 @@
+name: Deploy to GCP Production Server
+
+on:
+  push:
+    branches:
+      - master  # Your default branch
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Deploy to GCP Compute Engine
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --command="
+              cd ${{ secrets.PROJECT_PATH }} && \
+              echo '📥 Pulling latest code...' && \
+              git pull origin master && \
+              echo '📦 Installing dependencies...' && \
+              npm install --production && \
+              echo '🛑 Stopping server...' && \
+              pm2 stop TGG-Production || true && \
+              echo '🚀 Starting server...' && \
+              npm start && \
+              echo '✅ Deployment complete!' && \
+              pm2 status
+            "

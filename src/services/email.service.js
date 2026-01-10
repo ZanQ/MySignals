@@ -120,7 +120,7 @@ If you did not create an account, then ignore this email.`;
  */
 const sendMagicLinkEmail = async (to, token, userName = 'there') => {
   const subject = 'Your Magic Link to Sign In';
-  const magicLinkUrl = `${config.baseUrl}/auth/magic-link?token=${token}`;
+  const magicLinkUrl = `${config.baseUrl}/verify?token=${token}`;
   
   const { html, text } = loadTemplate('magicLink', {
     appName: 'MySignals',

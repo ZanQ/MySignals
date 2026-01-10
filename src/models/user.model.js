@@ -33,6 +33,62 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Subscription fields
+    is_payment_exempt: {
+      type: Boolean,
+      default: false,
+    },
+    stripe_customer_id: {
+      type: String,
+      default: null,
+    },
+    stripe_subscription_id: {
+      type: String,
+      default: null,
+    },
+    subscription_status: {
+      type: String,
+      enum: ['trial', 'active', 'past_due', 'canceled', 'incomplete', 'incomplete_expired', 'unpaid', null],
+      default: null,
+    },
+    trial_start_date: {
+      type: Date,
+      default: null,
+    },
+    trial_end_date: {
+      type: Date,
+      default: null,
+    },
+    subscription_start_date: {
+      type: Date,
+      default: null,
+    },
+    subscription_end_date: {
+      type: Date,
+      default: null,
+    },
+    // Additional subscription details
+    subscription_plan_name: {
+      type: String,
+      default: null,
+    },
+    subscription_amount: {
+      type: Number, // Amount in cents
+      default: null,
+    },
+    subscription_interval: {
+      type: String,
+      enum: ['month', 'year', null],
+      default: null,
+    },
+    current_period_end: {
+      type: Date,
+      default: null,
+    },
+    cancel_at_period_end: {
+      type: Boolean,
+      default: false,
+    },
     last_login: {
       type: Date,
       default: null,
@@ -67,19 +123,72 @@ userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
 };
 
 /**
- * Get active users subscribed to signals
+ * Get active users subscribed to signals who have active subscriptions
  * @returns {Promise<User[]>}
  */
 userSchema.statics.getSignalSubscribers = async function () {
-  return this.find({ active: true, subscribe_signals: true });
+  const users = await this.find({ active: true, subscribe_signals: true });
+  
+  // Filter users who have active subscriptions
+  return users.filter((user) => user.hasActiveSubscription());
 };
 
 /**
- * Get active users subscribed to positions
+ * Get active users subscribed to positions who have active subscriptions
  * @returns {Promise<User[]>}
  */
 userSchema.statics.getPositionSubscribers = async function () {
-  return this.find({ active: true, subscribe_positions: true });
+  const users = await this.find({ active: true, subscribe_positions: true });
+  
+  // Filter users who have active subscriptions
+  return users.filter((user) => user.hasActiveSubscription());
+};
+
+/**
+ * Check if user has active subscription (payment exempt, trial, or paid)
+ * @returns {boolean}
+ */
+userSchema.methods.hasActiveSubscription = function () {
+  // Payment exempt users always have access
+  if (this.is_payment_exempt) {
+    return true;
+  }
+
+  // Check if user is in trial period (using trial_end_date)
+  if (this.trial_end_date && new Date() <= this.trial_end_date) {
+    return true;
+  }
+
+  // Fallback: Check if user was created within last 30 days (for existing users without trial dates)
+  if (this.created_at) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    if (new Date(this.created_at) > thirtyDaysAgo) {
+      return true;
+    }
+  }
+
+  // Check if user has active paid subscription
+  if (
+    this.subscription_status === 'active' ||
+    this.subscription_status === 'trialing'
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Initialize trial period for new user (1 month)
+ */
+userSchema.methods.initializeTrial = function () {
+  if (!this.trial_start_date && !this.is_payment_exempt) {
+    this.trial_start_date = new Date();
+    this.trial_end_date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    this.subscription_status = 'trial';
+  }
 };
 
 /**

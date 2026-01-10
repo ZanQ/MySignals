@@ -17,6 +17,11 @@ router
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
   .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
 
+router
+  .route('/:userId/payment-exempt')
+  .post(auth('manageUsers'), validate(userValidation.getUser), userController.markPaymentExempt)
+  .delete(auth('manageUsers'), validate(userValidation.getUser), userController.removePaymentExempt);
+
 module.exports = router;
 
 /**
