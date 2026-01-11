@@ -24,8 +24,14 @@ if (config.env !== 'test') {
 // set security HTTP headers
 app.use(helmet());
 
-// parse json request body
-app.use(express.json());
+// parse json request body (except for Stripe webhook)
+app.use((req, res, next) => {
+  if (req.originalUrl === '/v1/subscriptions/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
