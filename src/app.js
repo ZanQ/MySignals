@@ -6,6 +6,7 @@ const compression = require('compression');
 const cors = require('cors');
 const passport = require('passport');
 const httpStatus = require('http-status');
+const path = require('path');
 const config = require('./config/config');
 const morgan = require('./config/morgan');
 const { jwtStrategy } = require('./config/passport');
@@ -35,6 +36,9 @@ app.use((req, res, next) => {
 
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
+
+// serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
 // sanitize request data
 app.use(xss());

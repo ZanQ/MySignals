@@ -119,11 +119,11 @@ If you did not create an account, then ignore this email.`;
  * @returns {Promise}
  */
 const sendMagicLinkEmail = async (to, token, userName = 'there') => {
-  const subject = 'Your Magic Link to Sign In';
+  const subject = 'Your Login Link to Sign In';
   const magicLinkUrl = `${config.baseUrl}/verify?token=${token}`;
   
   const { html, text } = loadTemplate('magicLink', {
-    appName: 'MySignals',
+    appName: 'The Guidance Group',
     userName,
     magicLink: magicLinkUrl,
     supportEmail: config.email.from,
