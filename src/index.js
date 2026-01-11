@@ -1,14 +1,32 @@
 const mongoose = require('mongoose');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
 
+var httpsOptions = {
+  key: fs.readFileSync('./src/certs/privkey.pem'),
+  cert: fs.readFileSync('./src/certs/fullchain.pem'),
+  ca: fs.readFileSync('./src/certs/chain.pem')
+}
+
 let server;
+
+server = https.createServer(httpsOptions, app);
+
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
-  server = app.listen(config.port, () => {
+
+  // Create HTTPS server
+  server.listen(config.port, () => {
     logger.info(`Listening to port ${config.port}`);
   });
+
+  /*server = app.listen(config.port, () => {
+    logger.info(`Listening to port ${config.port}`);
+  });*/
 });
 
 const exitHandler = () => {
