@@ -37,8 +37,8 @@ jobs:
               echo '${{ secrets.GH_PAT }}' | sudo -S git -c credential.helper='!f() { echo username=ZanQ; echo password=${{ secrets.GH_PAT }}; }; f' pull origin master && \
               echo '📦 Installing dependencies...' && \
               sudo npm install && \
-              echo '🔄 Fixing ownership...' && \
-              sudo chown -R www:www /www/wwwroot/tgg_production_server 2>/dev/null || true && \
+              echo '🔄 Fixing ownership (excluding .user.ini)...' && \
+              sudo find /www/wwwroot/tgg_production_server -not -name '.user.ini' -exec chown www:www {} + 2>/dev/null || true && \
               echo '🔄 Restarting server...' && \
               pm2 restart ecosystem.config.json || pm2 start ecosystem.config.json && \
               echo '✅ Deployment complete!' && \
