@@ -190,7 +190,11 @@ const handleSubscriptionUpdate = async (subscription) => {
       
       user.subscription_amount = price.unit_amount;
       user.subscription_interval = price.recurring.interval;
-      user.subscription_plan_name = price.nickname || `${price.recurring.interval}ly Plan`;
+
+      // Fetch product name from Stripe
+      const product = await stripe.products.retrieve(price.product);
+      const interval = price.recurring.interval === 'month' ? 'Monthly' : 'Annual';
+      user.subscription_plan_name = `${product.name} - ${interval}`; // e.g., "The Guidance Group - Monthly"
     }
     
     // Clear trial dates when subscription becomes active
