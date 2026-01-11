@@ -39,8 +39,11 @@ jobs:
               sudo npm install && \
               echo '🔄 Fixing ownership (excluding .user.ini)...' && \
               sudo find /www/wwwroot/tgg_production_server -not -name '.user.ini' -exec chown www:www {} + 2>/dev/null || true && \
-              echo '� Stopping server...' && \
-              cd /www/wwwroot/tgg_production_server && npx pm2 stop TGG-Production || true && \
-              echo '🚀 Starting server...' && \
-              npm start
+              echo '🛑 Stopping any existing processes...' && \
+              sudo -u peter_tang_lai bash -c 'cd /www/wwwroot/tgg_production_server && npx pm2 delete TGG-Production' || true && \
+              sleep 2 && \
+              echo '🚀 Starting server as peter_tang_lai...' && \
+              sudo -u peter_tang_lai bash -c 'cd /www/wwwroot/tgg_production_server && npx pm2 start ecosystem.config.json' && \
+              echo '✅ Deployment complete!' && \
+              sudo -u peter_tang_lai npx pm2 status
             "
