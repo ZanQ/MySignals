@@ -39,10 +39,8 @@ jobs:
               sudo npm install && \
               echo '🔄 Fixing ownership...' && \
               sudo chown -R www:www /www/wwwroot/tgg_production_server 2>/dev/null || true && \
-              echo '🛑 Stopping server...' && \
-              pm2 stop TGG-Production || true && \
-              echo '🚀 Starting server...' && \
-              npm start && \
+              echo '🔄 Restarting server...' && \
+              pm2 restart ecosystem.config.json || pm2 start ecosystem.config.json && \
               echo '✅ Deployment complete!' && \
               pm2 status
             "
