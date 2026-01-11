@@ -38,11 +38,11 @@ jobs:
               echo '📦 Installing dependencies...' && \
               sudo npm install && \
               echo '🔄 Fixing ownership...' && \
-              sudo chown -R peter_tang_lai:peter_tang_lai /www/wwwroot/tgg_production_server || true && \
+              sudo chown -R www:www /www/wwwroot/tgg_production_server 2>/dev/null || true && \
               echo '🛑 Stopping server...' && \
-              sudo -u peter_tang_lai pm2 stop TGG-Production || true && \
+              pm2 stop TGG-Production || true && \
               echo '🚀 Starting server...' && \
-              sudo -u peter_tang_lai pm2 start ecosystem.config.json && \
+              npm start && \
               echo '✅ Deployment complete!' && \
-              sudo -u peter_tang_lai pm2 status
+              pm2 status
             "
