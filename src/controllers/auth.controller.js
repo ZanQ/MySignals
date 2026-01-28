@@ -3,9 +3,27 @@ const catchAsync = require('../utils/catchAsync');
 const { authService, userService, tokenService, emailService } = require('../services');
 
 const register = catchAsync(async (req, res) => {
-  const user = await userService.createUser(req.body);
-  const tokens = await tokenService.generateAuthTokens(user);
-  res.status(httpStatus.CREATED).send({ user, tokens });
+  try {
+    const user = await userService.createUser(req.body);
+    
+    // Generate and send magic link email to new user
+    const magicLinkToken = await tokenService.generateMagicLinkToken(user);
+    await emailService.sendMagicLinkEmail(user.email, magicLinkToken, user.name);
+    
+    res.status(httpStatus.CREATED).send({ 
+      success: true, 
+      message: 'User added successfully',
+      user 
+    });
+  } catch (error) {
+    if (error.statusCode === httpStatus.BAD_REQUEST && error.message.includes('already exists')) {
+      return res.status(httpStatus.BAD_REQUEST).send({ 
+        success: false, 
+        message: 'User already exists' 
+      });
+    }
+    throw error;
+  }
 });
 
 const login = catchAsync(async (req, res) => {
@@ -48,9 +66,16 @@ const verifyEmail = catchAsync(async (req, res) => {
 });
 
 const sendMagicLink = catchAsync(async (req, res) => {
-  const { token, user } = await authService.sendMagicLink(req.body.email);
-  await emailService.sendMagicLinkEmail(req.body.email, token, user.name);
-  res.status(httpStatus.NO_CONTENT).send();
+  try {
+    const { token, user } = await authService.sendMagicLink(req.body.email);
+    await emailService.sendMagicLinkEmail(req.body.email, token, user.name);
+    res.status(httpStatus.NO_CONTENT).send();
+  } catch (error) {
+    if (error.statusCode === httpStatus.NOT_FOUND) {
+      return res.status(httpStatus.NOT_FOUND).send({ success: false, message: 'user not found' });
+    }
+    throw error;
+  }
 });
 
 const verifyMagicLink = catchAsync(async (req, res) => {

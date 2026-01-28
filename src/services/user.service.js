@@ -8,16 +8,31 @@ const ApiError = require('../utils/ApiError');
  * @returns {Promise<User>}
  */
 const createUser = async (userBody) => {
-  if (await User.isEmailTaken(userBody.email)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  try {
+    // Set defaults for subscription fields if not provided
+    const userData = {
+      email: userBody.email,
+      name: userBody.name,
+      subscribe_signals: userBody.subscribe_signals !== undefined ? userBody.subscribe_signals : true,
+      subscribe_positions: userBody.subscribe_positions !== undefined ? userBody.subscribe_positions : true,
+      active: true,
+      created_at: new Date(),
+    };
+    
+    const user = await User.create(userData);
+    
+    // Initialize trial period for new users (unless payment exempt)
+    user.initializeTrial();
+    await user.save();
+    
+    return user;
+  } catch (error) {
+    // Handle duplicate key error
+    if (error.code === 11000 || error.message.toLowerCase().includes('duplicate')) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
+    }
+    throw error;
   }
-  const user = await User.create(userBody);
-  
-  // Initialize trial period for new users (unless payment exempt)
-  user.initializeTrial();
-  await user.save();
-  
-  return user;
 };
 
 /**
